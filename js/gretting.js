@@ -1,0 +1,44 @@
+const form = document.querySelector(".js-form"),
+    input = form.querySelector("input"),
+    greeting = document.querySelector(".js-greetings");
+
+const USER_LS = "currentUser",
+    SHOWING_CN = "showing";
+
+function saveName(text){
+    localStorage.setItem(USER_LS, text);
+}
+
+function hendleSubmit(event){    
+    event.preventDefault();    // 엔터를 눌러도 이벤트가 생기는걸 방지한다. (새로고침안됨)
+    const currentValue = input.value;
+    paintGreeting(currentValue);
+    saveName(currentValue);
+}
+
+function askForName(){
+    form.classList.add(SHOWING_CN);
+    greeting.classList.remove(SHOWING_CN);    
+    form.addEventListener("submit", hendleSubmit);    
+}
+
+function paintGreeting(text){
+    form.classList.remove(SHOWING_CN);
+    greeting.classList.add(SHOWING_CN);
+    greeting.innerText = `${text}님 안녕하세요`;
+}
+
+function loadName(){
+    const currentUser = localStorage.getItem(USER_LS);  
+    if (currentUser === null){        
+        askForName();   
+    } else {        
+        paintGreeting(currentUser);
+    }
+}
+
+function init() {
+    loadName();
+}
+
+init();
