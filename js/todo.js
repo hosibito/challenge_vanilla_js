@@ -1,89 +1,163 @@
-const toDoForm = document.querySelector(".js-toDoForm"),
-    toDoinput = toDoForm.querySelector("input"),
-    toDoList = document.querySelector(".js-toDoList");
+const addTaskForm = document.querySelector(".js-addTaskForm");
+const addTaskinput = addTaskForm.querySelector("input");
+const pendingList = document.querySelector(".js-pendingList");
+const finishedList = document.querySelector(".js-finishedList");
 
-const TODOS_LS = 'toDos';
+const PENDING_LS = 'pendings';
+const FINISHED_LS = 'finisheds';
 
-let toDos = [];
+let pending_ls =[];
+let finishied_ls =[];
 
-// function filterFn(toDo){
-//     return toDo.id !== 1;
-// }
 
-function deleteToDo(event){
-    // console.log(event);
-    // console.log(event.target); //버튼 자체 태그가 나온다. 아이디는 부모테그에있다...
-    // console.dir(event.target);
-    // console.log(event.target.parentElement);
-    // console.log(event.target.parentNode);
-    // //구글 delete child element mdn 검색
-    const btn = event.target;
-    const li = btn.parentNode;
-    toDoList.removeChild(li);
+function hendleAddTaskFormSubmit(event){
+    event.preventDefault();    
+    const addtaskValue = addTaskinput.value;    
+   
+    paintPending(addtaskValue);
 
-    const cleanToDos = toDos.filter(function filterFn(toDo){
-        //console.log( toDo.id , li.id)
-        return toDo.id !== parseInt(li.id);
-    });
-    //console.log(cleanToDos)
-    toDos = cleanToDos ;
-    saveToDos();
+    addTaskinput.value = "";      
 }
 
-function saveToDos(){
-    //localStorage.setItem(TODOS_LS, toDos); 
-    // 로컬스토리지는  이름 : 데이터 로 저장되는데 데이터는 string 데이터만 올수 있다.
-    localStorage.setItem(TODOS_LS, JSON.stringify(toDos)); // 제이슨 스트링으로 변환해서 저장
-}
-
-function paintToDo(text){
+function paintPending(addtaskValue){
     const li = document.createElement("li");
-    const delBtn = document.createElement("button");    
     const span = document.createElement("span");
-    const newId = toDos.length + 1;
+    const delBtn = document.createElement("button");
+    const doneBtn = document.createElement("button");    
+    const newId = pending_ls.length + 1;
 
-    delBtn.innerHTML = "Χ"; 
-    delBtn.addEventListener("click", deleteToDo);
-    span.innerText = text;
+    span.innerHTML = addtaskValue;
+    delBtn.innerHTML = "삭제";
+    delBtn.addEventListener("click", deletePending)
+    doneBtn.innerHTML = "완료";
+    doneBtn.addEventListener("click", sendPendingToFinished)
 
+    li.appendChild(span);
+    li.appendChild(doneBtn);
     li.appendChild(delBtn);
-    li.appendChild(span);    
     li.id = newId;
-    toDoList.appendChild(li);
+    pendingList.appendChild(li);
 
-    const toDoObj = {
-        text: text,
-        //id: toDos.length + 1,
+    const pending_Obj =  {
+        pendingText: addtaskValue,
         id: newId,
     };
-    toDos.push(toDoObj);
-    saveToDos();
-    //toDoList.innerHTML = `<li>${text}</li>`
+
+    pending_ls.push(pending_Obj);
+
+    savePending()
 }
 
-function hendleSubmit(event){    
-    event.preventDefault();    
-    const currentValue = toDoinput.value;
-    paintToDo(currentValue);    
-    toDoinput.value = "";
+function savePending(){
+    localStorage.setItem(PENDING_LS, JSON.stringify(pending_ls));
 }
 
-function loadTodos(){
-    const loadedtoDos = localStorage.getItem(TODOS_LS);
-    if (loadedtoDos !== null){        
-        //console.log(loadedtoDos)
-        const parsedTodos = JSON.parse(loadedtoDos);
-        //console.log(parsedTodos);
-        parsedTodos.forEach(function(toDo){
-            //console.log(toDo.text);
-            paintToDo(toDo.text);
+function loadPending(){
+    const loadedPending = localStorage.getItem(PENDING_LS);
+    if (loadedPending !== null){
+        const parsedPending = JSON.parse(loadedPending);   
+        parsedPending.forEach( value => {
+            paintPending(value.pendingText);
         });
-    } 
+    }
 }
 
-function init(){
-    loadTodos();
-    toDoForm.addEventListener("submit", hendleSubmit)
+function deletePending(event){
+    const t_btn = event.target;
+    const t_li = t_btn.parentNode;
+    pendingList.removeChild(t_li);
+
+    const cleanPending_ls = pending_ls.filter( value => {
+        return value.id !== parseInt(t_li.id);
+    });
+    pending_ls = cleanPending_ls;
+    savePending();
+}
+
+function sendPendingToFinished(event){
+    const t_btn = event.target;
+    const t_li = t_btn.parentNode;
+    const targetPending = pending_ls.filter( value => {
+        return value.id === parseInt(t_li.id);       
+    });
+    console.log(targetPending[0].pendingText);
+    paintFinished(targetPending[0].pendingText);
+
+    deletePending(event);
+}
+
+function saveFinished(){
+    localStorage.setItem(FINISHED_LS, JSON.stringify(finishied_ls));
+}
+
+function paintFinished(finishied_text){
+    const li = document.createElement("li");
+    const span = document.createElement("span");
+    const delBtn = document.createElement("button");
+    const doneBtn = document.createElement("button");    
+    const newId = finishied_ls.length + 1;
+
+    span.innerHTML = finishied_text;
+    delBtn.innerHTML = "삭제";
+    delBtn.addEventListener("click", deleteFinished)
+    doneBtn.innerHTML = "되돌리기";
+    doneBtn.addEventListener("click", sendFinishedToPending)
+
+    li.appendChild(span);
+    li.appendChild(doneBtn);
+    li.appendChild(delBtn);
+    li.id = newId;
+    finishedList.appendChild(li);
+
+    const finished_Obj =  {
+        finishedText: finishied_text,
+        id: newId,
+    };
+
+    finishied_ls.push(finished_Obj);
+
+    saveFinished();
+}
+
+function loadFinished(){
+    const loadedFinished = localStorage.getItem(FINISHED_LS);
+    if (loadedFinished !== null){
+        const parsedFinished = JSON.parse(loadedFinished);   
+        parsedFinished.forEach( value => {
+            paintFinished(value.finishedText);
+        });
+    }
+}
+
+function deleteFinished(event){
+    const t_btn = event.target;
+    const t_li = t_btn.parentNode;
+    finishedList.removeChild(t_li);
+
+    const cleanFinished_ls = finishied_ls.filter( value => {
+        return value.id !== parseInt(t_li.id);
+    });
+    finishied_ls = cleanFinished_ls;
+    saveFinished();
+}
+
+function sendFinishedToPending(event){
+    const t_btn = event.target;
+    const t_li = t_btn.parentNode;
+    const targetFinished = finishied_ls.filter( value => {
+        return value.id === parseInt(t_li.id);       
+    });
+    console.log(targetFinished[0].finishedText);
+    paintPending(targetFinished[0].finishedText);    
+
+    deleteFinished(event);
+}
+
+
+function init(){    
+    loadPending();
+    loadFinished();
+    addTaskForm.addEventListener("submit", hendleAddTaskFormSubmit);
 }
 
 init();
